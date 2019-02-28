@@ -22,5 +22,8 @@
   "bugs": {
     "url": "https://github.com/bredele/robac/issues"
   },
-  "homepage": "https://github.com/bredele/robac#readme"
+  "homepage": "https://github.com/bredele/robac#readme",
+  "devDependencies": {
+    "tape": "^4.10.1"
+  }
 }

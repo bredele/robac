@@ -15,15 +15,14 @@ module.exports = (folder, secret) => {
       const token = authorization(req)
       if (token) {
         return jsonwebtoken.verify(token, secret, function(err, decoded) {
-          if (err) return handler(err)
+          if (err) return handler(err, null, json)
           else {
-            console.log('allowed', allowed, decoded.roles)
             const roles = intersection(allowed, decoded.roles)
             return handler(roles.length < 1 ? new Error('No role(s) match') : null, roles, json)
           }
         })
       } else {
-        return handler(new Error('Token not specified'))
+        return handler(new Error('Token not specified'), null, json)
       }
     }
     handler(null, [], json)

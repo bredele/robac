@@ -46,50 +46,60 @@ test('should execute callback if path exist but json roles not specified', asser
 })
 
 test('should execute callback if json roles exist but roles not specified', assert => {
-  assert.plan(1)
+  assert.plan(3)
   const handler = robac(join(__dirname, 'pages'), 'thisisasecret')
-  handler(request('/d'), err => {
+  handler(request('/d'), (err, roles, json) => {
     assert.equal(err == null, true)
+    assert.deepEqual(json, {meta: 'data'})
+    assert.deepEqual(roles, [])
   })
 })
 
 test('should pass error when token can not be decoded', assert => {
-  assert.plan(1)
+  assert.plan(3)
   const handler = robac(join(__dirname, 'pages'), 'what')
-  handler(request('/b'), err => {
+  handler(request('/b'), (err, roles, json) => {
     assert.equal(err != null, true)
+    assert.equal(roles == null, true)
+    assert.deepEqual(json, {roles: ['admin', 'super']})
   })
 })
 
 test('should pass error when role(s) has to be specified but token not present', assert => {
-  assert.plan(2)
+  assert.plan(4)
   const handler = robac(join(__dirname, 'pages'), 'thisisasecret')
   handler({
     url: '/b',
     headers: {}
-  }, err => {
+  }, (err, roles, json) => {
     assert.equal(err != null, true)
     assert.equal(err.message, 'Token not specified')
+    assert.equal(roles == null, true)
+    assert.deepEqual(json, {roles: ['admin', 'super']})
   })
 })
 
 test('should pass error when roles do not match', assert => {
-  assert.plan(2)
+  assert.plan(4)
   const handler = robac(join(__dirname, 'pages'), 'thisisasecret')
-  handler(request('/b', () => {}, ['hello']), err => {
+  handler(request('/b', () => {}, ['hello']), (err, roles, json) => {
     assert.equal(err != null, true)
     assert.equal(err.message, 'No role(s) match')
+    assert.deepEqual(roles, [])
+    assert.deepEqual(json, {roles: ['admin', 'super']})
   })
 })
 
-//
-// test('should execute callback when roles or pathname do not exist', assert => {
-//   assert.plan(2)
-//   const handler = robac(join(__dirname, 'pages'), 'thisisasecret')
-//   handler(request('/c'), () => assert.ok('success'), 'thisisasecret')
-//   handler(request('/'), () => assert.ok('success'), 'thisisasecret')
-// })
-//
+test('should execute callback when roles match', assert => {
+  assert.plan(3)
+  const handler = robac(join(__dirname, 'pages'), 'thisisasecret')
+  handler(request('/b', () => {}), (err, roles, json) => {
+    assert.equal(err == null, true)
+    assert.deepEqual(roles, ['super'])
+    assert.deepEqual(json, {roles: ['admin', 'super']})
+  })
+})
+
 // test('should not read authorization header if pathname do not exist', assert => {
 //   assert.plan(2)
 //   const handler = robac(join(__dirname, 'pages'), 'thisisasecret')

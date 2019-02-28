@@ -18,7 +18,7 @@ const handler = roles(join(__dirname, 'pages'), 'thisisasecret')
  * Create HTTP server.
  */
 
-http.createServer((req, res => {
+http.createServer((req, res) => {
   handler(req, (err) => {
     if (err) console.log('not authorized')
     else console.log('authorized')

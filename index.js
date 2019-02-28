@@ -7,7 +7,27 @@ const {join} = require('path')
 const jsonwebtoken = require('jsonwebtoken')
 const {parse} = require('url')
 
+/**
+ * Roles based access control middleware.
+ *
+ * @param {String} folder
+ * @pram {String} secret
+ * @return {Function}
+ * @api public
+ */
+
 module.exports = (folder, secret) => {
+  /**
+   * HTTP middleware.
+   *
+   * middleware pass wrror as first argument if roles do not match
+   * or token can not be decoded.
+   *
+   * @param {HttpRequest} req
+   * @param {Function} handler
+   * @api public
+   */
+
   const tree = (req, handler) => {
     const json = tree[parse(req.url).pathname] || {}
     const allowed = json.roles

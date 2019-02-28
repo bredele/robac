@@ -8,23 +8,31 @@
 **Ro**les **ba**sed **a**ccess **c**ontrol for HTTP servers using JWT authorization.
 
 
-## Usage
+## Example
+
+This module look for `roles.json` files in a given folder and returns a middleware that indicates if the access to a requested URL is forbidden or not. Access is given only if one or multiple `roles` within a JSON Web Token match the `roles` specified in the JSON file.
 
 ```js
 const http = require('http')
 const roles = require('robac')
 
-// parse folder and look for roles.json files
-const handler = roles(__dirname)
+// parse folder, look for roles.json files with roles field and
+// create roles based access control.
+const handler = roles(__dirname, 'jwtsecret')
 
 http.createServer((req, res) => {
-  // get pathname and look for roles
-  // use JWT secret and authorization header
-  handler(req, () => {
-    // do something if access to path
+  handler(req, (err) => {
+    if (err) {
+      // not authorized
+    } else {
+      // serve page when authorized
+    }
   })
 })
 ```
+
+
+Check out [an example](./test/example.js)
 
 ## Installation
 

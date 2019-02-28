@@ -25,5 +25,8 @@
   "homepage": "https://github.com/bredele/robac#readme",
   "devDependencies": {
     "tape": "^4.10.1"
+  },
+  "dependencies": {
+    "jsonwebtoken": "^8.5.0"
   }
 }

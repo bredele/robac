@@ -12,47 +12,128 @@ test('should return a middleware function', assert => {
   assert.equal(typeof robac(), 'function')
 })
 
-test('should parse folder and generate pathnames', assert => {
-  assert.plan(3)
+test('should parse folder and generate pathnames with roles', assert => {
+  assert.plan(4)
   const handler = robac(join(__dirname, 'pages'))
-  assert.equal(!!handler['/'], true)
-  assert.equal(!!handler['/a'], true)
+  assert.equal(handler['/'] == null, true)
+  assert.equal(handler['/a'] == null, true)
   assert.equal(!!handler['/b'], true)
+  assert.equal(!!handler['/d'], true)
 })
 
 test('should attach roles.json to pathname', assert => {
-  assert.plan(3)
+  assert.plan(1)
   const handler = robac(join(__dirname, 'pages'))
-  assert.deepEqual(handler['/'], {})
   assert.deepEqual(handler['/b'], {
     roles: ['admin', 'super']
   })
-  assert.deepEqual(handler['/a'], {})
 })
 
-test('should execute callback only if authorization header but pathname does not have roles', assert => {
+test('should execute callback if path do not exist', assert => {
   assert.plan(1)
   const handler = robac(join(__dirname, 'pages'), 'thisisasecret')
-  const req = {
-    url: '/c',
-    headers: {
-      authorization: `Bearer ${token()}`
-    }
-  }
-  handler(req, () => assert.ok('success'), 'thisisasecret')
+  handler(request('/c'), err => {
+    assert.equal(err == null, true)
+  })
 })
 
+test('should execute callback if path exist but json roles not specified', assert => {
+  assert.plan(1)
+  const handler = robac(join(__dirname, 'pages'), 'thisisasecret')
+  handler(request('/'), err => {
+    assert.equal(err == null, true)
+  })
+})
+
+test('should execute callback if json roles exist but roles not specified', assert => {
+  assert.plan(1)
+  const handler = robac(join(__dirname, 'pages'), 'thisisasecret')
+  handler(request('/d'), err => {
+    assert.equal(err == null, true)
+  })
+})
+
+test('should pass error when token can not be decoded', assert => {
+  assert.plan(1)
+  const handler = robac(join(__dirname, 'pages'), 'what')
+  handler(request('/b'), err => {
+    assert.equal(err != null, true)
+  })
+})
+
+test('should pass error when role(s) has to be specified but token not present', assert => {
+  assert.plan(2)
+  const handler = robac(join(__dirname, 'pages'), 'thisisasecret')
+  handler({
+    url: '/b',
+    headers: {}
+  }, err => {
+    assert.equal(err != null, true)
+    assert.equal(err.message, 'Token not specified')
+  })
+})
+
+test('should pass error when roles do not match', assert => {
+  assert.plan(2)
+  const handler = robac(join(__dirname, 'pages'), 'thisisasecret')
+  handler(request('/b', () => {}, ['hello']), err => {
+    assert.equal(err != null, true)
+    assert.equal(err.message, 'No role(s) match')
+  })
+})
+
+//
+// test('should execute callback when roles or pathname do not exist', assert => {
+//   assert.plan(2)
+//   const handler = robac(join(__dirname, 'pages'), 'thisisasecret')
+//   handler(request('/c'), () => assert.ok('success'), 'thisisasecret')
+//   handler(request('/'), () => assert.ok('success'), 'thisisasecret')
+// })
+//
+// test('should not read authorization header if pathname do not exist', assert => {
+//   assert.plan(2)
+//   const handler = robac(join(__dirname, 'pages'), 'thisisasecret')
+//   handler(request('/c', () => {
+//     assert.fail('authorization header')
+//   }), () => assert.ok('success'), 'thisisasecret')
+//   handler(request('/', () => {
+//     assert.fail('authorization header')
+//   }), () => assert.ok('success'), 'thisisasecret')
+// })
+//
+//
+//
+//
 // test('should execute callback only if authorization header contains allowed role', assert => {
 //   assert.plan(1)
 //   const handler = robac(join(__dirname, 'pages'), 'thisisasecret')
-//   const req = {
-//     url: '/b',
-//     headers: {
-//       authorization: `Bearer ${token()}`
-//     }
-//   }
-//   handler(req, () => assert.ok('success'), 'thisisasecret')
+//   handler(request('/b'), (err, roles) => {
+//     if (err) assert.fail('roles do not exist')
+//     else assert.ok('success')
+//   }, 'thisisasecret')
 // })
+
+
+/**
+ * Mock HttpRequest object.
+ *
+ * @param {String} pathname
+ * @param {Function} spy
+ * @return {Object}
+ * @api private
+ */
+
+function request (pathname, spy = () => {}, roles) {
+  return {
+    url: pathname,
+    headers: new Proxy({}, {
+      get (target, key) {
+        spy()
+        return `Bearer ${token(roles)}`
+      }
+    })
+  }
+}
 
 /**
  * Generate test token.
@@ -61,8 +142,8 @@ test('should execute callback only if authorization header but pathname does not
  * @api private
  */
 
-function token () {
+function token (roles = ['super']) {
   return jsonwebtoken.sign({
-    roles: ['super']
+    roles
   }, 'thisisasecret')
 }

@@ -9,20 +9,42 @@ const {parse} = require('url')
 
 module.exports = (folder, secret) => {
   const tree = (req, handler) => {
-    const pathname = parse(req.url).pathname
-    const token = authorization(req)
-
-    if (!tree[pathname]) handler()
-    else {
+    const json = tree[parse(req.url).pathname] || {}
+    const allowed = json.roles
+    if (allowed) {
+      const token = authorization(req)
       if (token) {
-        jsonwebtoken.verify(token, secret, function(err, decoded) {
-          console.log('decoded', err, decoded)
+        return jsonwebtoken.verify(token, secret, function(err, decoded) {
+          if (err) return handler(err)
+          else {
+            console.log('allowed', allowed, decoded.roles)
+            const roles = intersection(allowed, decoded.roles)
+            return handler(roles.length < 1 ? new Error('No role(s) match') : null, roles, json)
+          }
         })
+      } else {
+        return handler(new Error('Token not specified'))
       }
     }
+    handler(null, [], json)
   }
   if (folder) tree['/'] = roles(folder)
   return walk(folder, folder, tree)
+}
+
+/**
+ * Array intersection.
+ *
+ * @param {Array} a
+ * @param {Array} b
+ * @return {Array}
+ * @api private
+ */
+
+function intersection (a = [], b = []) {
+  return a.filter(item => {
+    return b.indexOf(item) > -1
+  })
 }
 
 /**
@@ -75,6 +97,8 @@ function roles (file) {
   let obj = {}
   try {
     obj = require(join(file, 'roles.json'))
-  } catch (e) {}
+  } catch (e) {
+    obj = null
+  }
   return obj
 }

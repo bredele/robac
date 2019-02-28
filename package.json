@@ -1,0 +1,26 @@
+{
+  "name": "robac",
+  "version": "1.0.0",
+  "description": "Role based access management for HTTP servers",
+  "main": "index.js",
+  "scripts": {
+    "test": "tape test/*.js"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/bredele/robac.git"
+  },
+  "keywords": [
+    "role",
+    "access",
+    "control",
+    "jwt",
+    "authentication"
+  ],
+  "author": "Olivier Wietrich",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/bredele/robac/issues"
+  },
+  "homepage": "https://github.com/bredele/robac#readme"
+}

@@ -4,7 +4,7 @@
   "description": "Role based access management for HTTP servers",
   "main": "index.js",
   "scripts": {
-    "test": "tape test/*.js"
+    "test": "tape test/robac.js"
   },
   "engines": {
     "node": ">= 8.9.4"

@@ -138,6 +138,6 @@ function roles (file, namespace = 'roles') {
  */
 
 function session (req, key) {
-  const cookies = cookie.parse(req.headers.cookie)
+  const cookies = cookie.parse(req.headers.cookie || '')
   return cookies ? cookies[key] : null
 }

@@ -17,6 +17,9 @@ const {parse} = require('url')
  */
 
 module.exports = (folder, secret) => {
+  let options = typeof secret === 'string'
+    ? {secret}
+    : {...secret}
   /**
    * HTTP middleware.
    *
@@ -34,7 +37,7 @@ module.exports = (folder, secret) => {
     if (allowed) {
       const token = authorization(req)
       if (token) {
-        return jsonwebtoken.verify(token, secret, function(err, decoded) {
+        return jsonwebtoken.verify(token, options.secret, function(err, decoded) {
           if (err) return handler(err, null, json)
           else {
             const roles = intersection(allowed, decoded.roles)

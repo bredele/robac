@@ -6,6 +6,7 @@ const fs = require('fs')
 const {join} = require('path')
 const jsonwebtoken = require('jsonwebtoken')
 const {parse} = require('url')
+const cookie = require('cookie')
 
 /**
  * Roles based access control middleware.
@@ -35,7 +36,8 @@ module.exports = (folder, secret) => {
     const json = tree[parse(req.url).pathname] || {}
     const allowed = json.roles
     if (allowed) {
-      const token = authorization(req)
+      const cookie = options.cookie
+      const token = (cookie ? session(req, cookie) : null) || authorization(req)
       if (token) {
         return jsonwebtoken.verify(token, options.secret, function(err, decoded) {
           if (err) return handler(err, null, json)
@@ -124,4 +126,18 @@ function roles (file, namespace = 'roles') {
     obj = null
   }
   return obj
+}
+
+/**
+ * Read cookie session.
+ *
+ * @param {Object} req
+ * @param {String} key
+ * @return {Object}
+ * @api private
+ */
+
+function session (req, key) {
+  const cookies = cookie.parse(req.headers.cookie)
+  return cookies[key]
 }

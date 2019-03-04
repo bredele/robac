@@ -121,6 +121,30 @@ test('should change file name', assert => {
   })
 })
 
+test('should get token from cookie', assert => {
+  assert.plan(1)
+  const handler = robac(join(__dirname, 'example2'), {
+    secret: 'thisisasecret',
+    cookie: 'access_token',
+    namespace: 'rules'
+  })
+  handler(cookie('/'), (err, roles) => {
+    assert.deepEqual(roles, ['super'])
+  })
+})
+
+test('should fallback to authorization header if cookie does not exist', assert => {
+  assert.plan(1)
+  const handler = robac(join(__dirname, 'example2'), {
+    secret: 'thisisasecret',
+    cookie: 'access_token',
+    namespace: 'rules'
+  })
+  handler(request('/', () => {
+    assert.ok('success')
+  }), () => {})
+})
+
 /**
  * Mock HttpRequest object.
  *
@@ -135,10 +159,28 @@ function request (pathname, spy = () => {}, roles) {
     url: pathname,
     headers: new Proxy({}, {
       get (target, key) {
-        spy()
+        if (key === 'authorization') spy()
         return `Bearer ${token(roles)}`
       }
     })
+  }
+}
+
+/**
+ * Mock HttpRequest object.
+ *
+ * @param {String} pathname
+ * @param {Function} spy
+ * @return {Object}
+ * @api private
+ */
+
+function cookie (pathname) {
+  return {
+    url: pathname,
+    headers: {
+      cookie: `access_token=${token()}`
+    }
   }
 }
 

@@ -14,7 +14,7 @@ test('should return a middleware function', assert => {
 
 test('should parse folder and generate pathnames with roles', assert => {
   assert.plan(4)
-  const handler = robac(join(__dirname, 'pages'))
+  const handler = robac(join(__dirname, 'example1'))
   assert.equal(handler['/'] == null, true)
   assert.equal(handler['/a'] == null, true)
   assert.equal(!!handler['/b'], true)
@@ -23,7 +23,7 @@ test('should parse folder and generate pathnames with roles', assert => {
 
 test('should attach roles.json to pathname', assert => {
   assert.plan(1)
-  const handler = robac(join(__dirname, 'pages'))
+  const handler = robac(join(__dirname, 'example1'))
   assert.deepEqual(handler['/b'], {
     roles: ['admin', 'super']
   })
@@ -31,7 +31,7 @@ test('should attach roles.json to pathname', assert => {
 
 test('should execute callback if path does not exist', assert => {
   assert.plan(1)
-  const handler = robac(join(__dirname, 'pages'), 'thisisasecret')
+  const handler = robac(join(__dirname, 'example1'), 'thisisasecret')
   handler(request('/c'), err => {
     assert.equal(err == null, true)
   })
@@ -39,7 +39,7 @@ test('should execute callback if path does not exist', assert => {
 
 test('should execute callback if path exists but json roles not specified', assert => {
   assert.plan(1)
-  const handler = robac(join(__dirname, 'pages'), 'thisisasecret')
+  const handler = robac(join(__dirname, 'example1'), 'thisisasecret')
   handler(request('/'), err => {
     assert.equal(err == null, true)
   })
@@ -47,7 +47,7 @@ test('should execute callback if path exists but json roles not specified', asse
 
 test('should execute callback if json roles exists but roles not specified', assert => {
   assert.plan(3)
-  const handler = robac(join(__dirname, 'pages'), 'thisisasecret')
+  const handler = robac(join(__dirname, 'example1'), 'thisisasecret')
   handler(request('/d'), (err, roles, json) => {
     assert.equal(err == null, true)
     assert.deepEqual(json, {meta: 'data'})
@@ -57,7 +57,7 @@ test('should execute callback if json roles exists but roles not specified', ass
 
 test('should pass error when token can not be decoded', assert => {
   assert.plan(3)
-  const handler = robac(join(__dirname, 'pages'), 'what')
+  const handler = robac(join(__dirname, 'example1'), 'what')
   handler(request('/b'), (err, roles, json) => {
     assert.equal(err != null, true)
     assert.equal(roles == null, true)
@@ -67,7 +67,7 @@ test('should pass error when token can not be decoded', assert => {
 
 test('should pass error when role(s) has to be specified but token not present', assert => {
   assert.plan(4)
-  const handler = robac(join(__dirname, 'pages'), 'thisisasecret')
+  const handler = robac(join(__dirname, 'example1'), 'thisisasecret')
   handler({
     url: '/b',
     headers: {}
@@ -81,7 +81,7 @@ test('should pass error when role(s) has to be specified but token not present',
 
 test('should pass error when roles do not match', assert => {
   assert.plan(4)
-  const handler = robac(join(__dirname, 'pages'), 'thisisasecret')
+  const handler = robac(join(__dirname, 'example1'), 'thisisasecret')
   handler(request('/b', () => {}, ['hello']), (err, roles, json) => {
     assert.equal(err != null, true)
     assert.equal(err.message, 'No role(s) match')
@@ -92,11 +92,32 @@ test('should pass error when roles do not match', assert => {
 
 test('should pass roles when match', assert => {
   assert.plan(3)
-  const handler = robac(join(__dirname, 'pages'), 'thisisasecret')
+  const handler = robac(join(__dirname, 'example1'), 'thisisasecret')
   handler(request('/b', () => {}), (err, roles, json) => {
     assert.equal(err == null, true)
     assert.deepEqual(roles, ['super'])
     assert.deepEqual(json, {roles: ['admin', 'super']})
+  })
+})
+
+test('should work with options object', assert => {
+  assert.plan(1)
+  const handler = robac(join(__dirname, 'example1'), {
+    secret: 'thisisasecret'
+  })
+  handler(request('/b'), (err, roles) => {
+    assert.deepEqual(roles, ['super'])
+  })
+})
+
+test('should change file name', assert => {
+  assert.plan(1)
+  const handler = robac(join(__dirname, 'example2'), {
+    secret: 'thisisasecret',
+    namespace: 'rules'
+  })
+  handler(request('/'), (err, roles) => {
+    assert.deepEqual(roles, ['super'])
   })
 })
 

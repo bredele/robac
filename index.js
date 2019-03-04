@@ -18,7 +18,7 @@ const {parse} = require('url')
 
 module.exports = (folder, secret) => {
   let options = typeof secret === 'string'
-    ? {secret}
+    ? {secret, namespace: 'roles'}
     : {...secret}
   /**
    * HTTP middleware.
@@ -50,8 +50,8 @@ module.exports = (folder, secret) => {
     }
     handler(null, [], json)
   }
-  if (folder) tree['/'] = roles(folder)
-  return walk(folder, folder, tree)
+  if (folder) tree['/'] = roles(folder, options.namespace)
+  return walk(folder, folder, tree, options.namespace)
 }
 
 /**
@@ -90,17 +90,18 @@ function authorization (req) {
  * @param {String} root
  * @param {String} folder
  * @param {Object} tree
+ * @param {String} namespace
  * @api private
  */
 
-function walk (root, folder, tree) {
+function walk (root, folder, tree, namespace) {
   if (folder) {
     fs.readdirSync(folder).map(file => {
       const path = join(folder, file)
       if (fs.statSync(path).isDirectory()) {
         const pathname = path.substring(root.length)
-        tree[pathname] = roles(path)
-        walk(root, path, tree)
+        tree[pathname] = roles(path, namespace)
+        walk(root, path, tree, namespace)
       }
     })
   }
@@ -115,10 +116,10 @@ function walk (root, folder, tree) {
  * @api private
  */
 
-function roles (file) {
+function roles (file, namespace = 'roles') {
   let obj = {}
   try {
-    obj = require(join(file, 'roles.json'))
+    obj = require(join(file, `${namespace}.json`))
   } catch (e) {
     obj = null
   }

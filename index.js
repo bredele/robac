@@ -43,7 +43,7 @@ module.exports = (folder, secret) => {
           if (err) return handler(err, null, json)
           else {
             const roles = intersection(allowed, decoded.roles)
-            return handler(roles.length < 1 ? new Error('No role(s) match') : null, roles, json)
+            return handler(roles.length < 1 ? new Error('No role(s) match') : null, roles, json, decoded)
           }
         })
       } else {

@@ -145,6 +145,14 @@ test('should fallback to authorization header if cookie does not exist', assert 
   }), () => {})
 })
 
+test('should always send token payload if decoded', assert => {
+  assert.plan(1)
+  const handler = robac(join(__dirname, 'example1'), 'thisisasecret')
+  handler(request('/b'), (err, roles, json, decoded) => {
+    assert.deepEqual(decoded.roles, ['super'])
+  })
+})
+
 /**
  * Mock HttpRequest object.
  *
